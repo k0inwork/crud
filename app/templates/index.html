@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Мой Ежедневник (Junior Edition)</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .entry { border-bottom: 1px solid #ddd; padding: 10px 0; }
+        .completed { text-decoration: line-through; color: gray; }
+        a { text-decoration: none; color: blue; }
+        .btn { padding: 5px 10px; background: #28a745; color: white; border-radius: 4px; }
+        .btn-danger { background: #dc3545; }
+        .btn-edit { background: #ffc107; color: black; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📔 Мой Ежедневник</h1>
+        <a href="{{ url_for('main.create_entry') }}" class="btn">+ Новая запись</a>
+
+        <h2>Все записи:</h2>
+        <!-- Проходимся циклом по всем записям из базы -->
+        {% for entry in entries %}
+            <div class="entry">
+                <!-- Если запись выполнена, применяем класс completed, чтобы перечеркнуть текст -->
+                <h3 class="{% if entry.is_completed %}completed{% endif %}">
+                    {{ entry.title }}
+                    <small>({{ entry.created_at.strftime('%Y-%m-%d %H:%M') }})</small>
+                </h3>
+                <!-- Ограничиваем длину контента чтобы не было слишком длинно -->
+                <p>{{ entry.content[:100] }}...</p>
+
+                <!-- Кнопки действий -->
+                <a href="{{ url_for('main.get_entry', id=entry.id) }}">👀 Посмотреть</a> |
+                <a href="{{ url_for('main.toggle_completed', id=entry.id) }}">
+                    {% if entry.is_completed %}❌ Отменить{% else %}✅ Выполнено{% endif %}
+                </a> |
+                <a href="{{ url_for('main.edit_entry', id=entry.id) }}" class="btn btn-edit">✏️ Редактировать</a> |
+                <a href="{{ url_for('main.delete_entry', id=entry.id) }}" class="btn btn-danger" onclick="return confirm('Точно удалить?');">🗑 Удалить</a>
+            </div>
+        {% else %}
+            <p>Записей пока нет. Создай первую!</p>
+        {% endfor %}
+    </div>
+</body>
+</html>

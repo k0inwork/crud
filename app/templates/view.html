@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ entry.title }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #eef; margin: 20px; }
+        .view-container { max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .date { color: #888; font-size: 0.9em; }
+        .content { white-space: pre-wrap; /* Чтобы переносы строк из textarea работали */ font-size: 1.1em; line-height: 1.6; margin-top: 20px; }
+        .status { padding: 5px; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 15px;}
+        .done { background: #d4edda; color: #155724; }
+        .not-done { background: #f8d7da; color: #721c24; }
+        .btn { text-decoration: none; padding: 8px 15px; background: #007bff; color: white; border-radius: 4px; display: inline-block; margin-top: 20px;}
+        .btn:hover { background: #0056b3; }
+        a { color: #007bff; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="view-container">
+        <!-- Показываем статус записи цветным блоком -->
+        <div class="status {% if entry.is_completed %}done{% else %}not-done{% endif %}">
+            {% if entry.is_completed %}✅ Выполнено{% else %}⏳ В процессе{% endif %}
+        </div>
+
+        <!-- Заголовок записи (H1) -->
+        <h1>{{ entry.title }}</h1>
+        <div class="date">📅 Создана: {{ entry.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+
+        <!-- Сам текст записи -->
+        <div class="content">{{ entry.content }}</div>
+
+        <br>
+        <hr>
+
+        <!-- Кнопки управления этой записью -->
+        <a href="{{ url_for('main.edit_entry', id=entry.id) }}" class="btn">✏️ Редактировать</a>
+        <a href="{{ url_for('main.index') }}" class="btn" style="background: #6c757d;">⬅️ Вернуться назад</a>
+    </div>
+</body>
+</html>
