@@ -1,3 +1,4 @@
+import os
 from app import create_app
 
 # Instantiate the Flask application via the factory pattern function.
@@ -10,5 +11,6 @@ if __name__ == '__main__':
     # Start the local development server.
     # host='0.0.0.0' exposes the server to all network interfaces.
     # debug=True provides tracebacks in the browser for easier development.
-    # Port 5000 is the default port for Flask development servers.
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # The port is dynamically loaded from the environment, defaulting to 5000.
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
