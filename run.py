@@ -1,13 +1,14 @@
 from app import create_app
 
-# Создаем приложение (вызываем нашу фабрику из __init__.py)
-# Теперь у нас есть готовый объект Flask для работы
+# Instantiate the Flask application via the factory pattern function.
+# This makes the application ready to be served or run in development mode.
 app = create_app()
 
-# Если мы запускаем этот файл напрямую (например: python run.py),
-# то условие __name__ == '__main__' сработает и сервер запустится
+# This conditional ensures that the server runs only if this script is executed directly
+# (e.g., python run.py) and not when imported elsewhere.
 if __name__ == '__main__':
-    # Запускаем локальный сервер Flask.
-    # debug=True - чтобы при ошибке мы видели подробный экран с красным текстом в браузере
-    # host='0.0.0.0' - чтобы можно было достучаться из других сетей (для песочниц и Docker-а нужно)
+    # Start the local development server.
+    # host='0.0.0.0' exposes the server to all network interfaces.
+    # debug=True provides tracebacks in the browser for easier development.
+    # Port 5000 is the default port for Flask development servers.
     app.run(host='0.0.0.0', port=5000, debug=True)

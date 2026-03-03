@@ -1,16 +1,16 @@
 import os
 from dotenv import load_dotenv
 
-# Загружаем переменные окружения из файла .env (чтобы пароли не торчали в коде)
+# Load environment variables from a .env file so secrets are not hardcoded
 load_dotenv()
 
 class Config:
-    # Настройка базы данных. Если переменная DATABASE_URL не задана, будем использовать sqlite для тестов (на всякий случай)
+    # Database connection string. Falls back to sqlite if DATABASE_URL is not set in the environment
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL') or 'sqlite:///diary.db'
 
-    # Отключаем предупреждения SQLAlchemy о том, что что-то там меняется, чтобы не засорять консоль
+    # Disable SQLAlchemy modification tracking to avoid warnings and save memory
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # Секретный ключ нужен для безопасности, например, чтобы формы работали (CSRF и т.д.)
-    # Если его нет в .env, то ставим дефолтный (но лучше всегда задавать свой!)
+    # Secret key used for session management and CSRF protection in forms
+    # Using a default fallback value if not provided in the environment (not recommended for production)
     SECRET_KEY = os.getenv('SECRET_KEY') or 'my-super-secret-key-for-my-diary'

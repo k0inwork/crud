@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>{{ entry.title }}</title>
@@ -7,7 +7,7 @@
         body { font-family: Arial, sans-serif; background: #eef; margin: 20px; }
         .view-container { max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         .date { color: #888; font-size: 0.9em; }
-        .content { white-space: pre-wrap; /* Чтобы переносы строк из textarea работали */ font-size: 1.1em; line-height: 1.6; margin-top: 20px; }
+        .content { white-space: pre-wrap; /* Keeps formatting from the form's textarea intact */ font-size: 1.1em; line-height: 1.6; margin-top: 20px; }
         .status { padding: 5px; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 15px;}
         .done { background: #d4edda; color: #155724; }
         .not-done { background: #f8d7da; color: #721c24; }
@@ -18,24 +18,24 @@
 </head>
 <body>
     <div class="view-container">
-        <!-- Показываем статус записи цветным блоком -->
+        <!-- Renders a conditionally styled badge based on the completion status of the entry -->
         <div class="status {% if entry.is_completed %}done{% else %}not-done{% endif %}">
-            {% if entry.is_completed %}✅ Выполнено{% else %}⏳ В процессе{% endif %}
+            {% if entry.is_completed %}Completed{% else %}In Progress{% endif %}
         </div>
 
-        <!-- Заголовок записи (H1) -->
+        <!-- Header displaying the title of the diary entry -->
         <h1>{{ entry.title }}</h1>
-        <div class="date">📅 Создана: {{ entry.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+        <div class="date">Created: {{ entry.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
 
-        <!-- Сам текст записи -->
+        <!-- Main body of the entry text rendered here -->
         <div class="content">{{ entry.content }}</div>
 
         <br>
         <hr>
 
-        <!-- Кнопки управления этой записью -->
-        <a href="{{ url_for('main.edit_entry', id=entry.id) }}" class="btn">✏️ Редактировать</a>
-        <a href="{{ url_for('main.index') }}" class="btn" style="background: #6c757d;">⬅️ Вернуться назад</a>
+        <!-- Navigation options for managing the current entry and returning to index -->
+        <a href="{{ url_for('main.edit_entry', id=entry.id) }}" class="btn">Edit Entry</a>
+        <a href="{{ url_for('main.index') }}" class="btn" style="background: #6c757d;">Back to Index</a>
     </div>
 </body>
 </html>

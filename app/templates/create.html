@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Создать запись - Мой Ежедневник</title>
+    <title>Create Entry - My Diary</title>
     <style>
         body { font-family: Arial, sans-serif; background: #eef; margin: 20px; }
         .form-container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
@@ -14,22 +14,22 @@
 </head>
 <body>
     <div class="form-container">
-        <h2>Создание новой записи</h2>
+        <h2>Create New Entry</h2>
 
-        <!-- Форма отправляет POST-запрос на маршрут /create -->
+        <!-- Sends a POST request to the application '/create' endpoint -->
         <form action="{{ url_for('main.create_entry') }}" method="POST">
-            <label for="title">Заголовок:</label>
-            <input type="text" id="title" name="title" required placeholder="О чем сегодня поговорим?">
+            <label for="title">Title:</label>
+            <input type="text" id="title" name="title" required placeholder="Enter a title for your entry">
 
-            <label for="content">Текст записи:</label>
-            <!-- Поле для текста. required означает, что форма не отправится пустой -->
-            <textarea id="content" name="content" rows="10" required placeholder="Пиши сюда все мысли..."></textarea>
+            <label for="content">Entry Content:</label>
+            <!-- Multiline text area block. Set required to enforce non-empty submissions -->
+            <textarea id="content" name="content" rows="10" required placeholder="Write your content here..."></textarea>
 
-            <button type="submit" class="btn">Сохранить</button>
+            <button type="submit" class="btn">Save Entry</button>
         </form>
 
         <br>
-        <a href="{{ url_for('main.index') }}">⬅️ Назад к списку</a>
+        <a href="{{ url_for('main.index') }}">Back to Index</a>
     </div>
 </body>
 </html>

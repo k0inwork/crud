@@ -3,28 +3,26 @@ from config import Config
 from .models import db
 from .routes import main_bp
 
-# Функция, которая собирает (инициализирует) наше Flask-приложение
-# Джуны любят делать так (Application Factory), потому что так пишут в крутых туториалах
+# Application Factory function to create and configure the Flask application instance.
+# Recommended approach for maintainability and testing instead of global app instances.
 def create_app():
-    # Создаем саму программу Flask
+    # Instantiate the Flask application
     app = Flask(__name__)
 
-    # Говорим ей взять настройки из файла config.py
+    # Load configuration settings from the Config object (defined in config.py)
     app.config.from_object(Config)
 
-    # Привязываем базу данных (Алхимию) к нашему приложению
+    # Initialize the SQLAlchemy extension with the application instance
     db.init_app(app)
 
-    # Прицепляем все наши пути (роуты) из файла routes.py
-    # Заметь, мы их берем из Blueprint, который назвали main_bp
+    # Register the main blueprint to attach all routes to the application
     app.register_blueprint(main_bp)
 
-    # Запускаем создание таблиц в базе данных, если их еще нет.
-    # Это нужно чтобы SQLAlchemy сама создала табличку entries в PostgreSQL или SQLite
+    # Use the application context to perform setup tasks like creating database tables
+    # if they do not exist already (useful for development and local testing).
     with app.app_context():
-        # Сначала db.create_all() посмотрит все модели (у нас это Entry)
+        # Creates all tables mapped by SQLAlchemy models (e.g., 'entries')
         db.create_all()
-        # Если таблица есть, ничего страшного не произойдет (ошибки не будет)
 
-    # Возвращаем готовое приложение, чтобы его можно было запустить
+    # Return the configured application instance
     return app

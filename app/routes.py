@@ -1,176 +1,191 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for
 from .models import db, Entry
 
-# Создаем блюпринт (это как бы кусочек нашего приложения, чтобы все не писать в одном файле)
+# Define the blueprint to organize routes in a modular way.
+# Avoids keeping all application logic in a single file.
 main_bp = Blueprint('main', __name__)
 
-# Главная страница - тут мы будем видеть все наши записи (список)
-# Она отвечает на запросы GET (просто посмотреть) и POST (если форма что-то отправила)
+# Route to display all entries in the diary.
+# Supports GET to view the list.
 @main_bp.route('/', methods=['GET'])
 def index():
     try:
-        # Достаем все записи из базы (начинаем с новых, поэтому order_by)
+        # Retrieve all entries from the database, ordered by the most recent first.
         entries = Entry.query.order_by(Entry.created_at.desc()).all()
 
-        # Если в URL есть параметр ?json=1 или ?json=true, то возвращаем JSON
-        if request.args.get('json'):
-            # Проходимся по всем записям и делаем из них словари с помощью to_dict()
+        # Check if the client requested JSON format via query parameter (?json).
+        if 'json' in request.args:
+            # Convert the list of objects into a list of dictionaries for JSON serialization.
             entries_list = [entry.to_dict() for entry in entries]
             return jsonify({'entries': entries_list, 'status': 'success'})
 
-        # Если параметра нет, то просто рисуем HTML страничку (шаблон index.html)
-        # Передаем туда наши записи, чтобы шаблон смог их показать
+        # Otherwise, render the HTML template with the entries.
+        # Pass the entries variable to the template context.
         return render_template('index.html', entries=entries)
 
     except Exception as e:
-        # Если что-то пошло не так (например, база упала), мы ловим ошибку тут
-        # Возвращаем простой JSON с ошибкой
-        return jsonify({'error': str(e), 'message': 'Упс, что-то пошло не так на главной странице :('}), 500
+        # Catch unexpected errors (e.g., database connection issues).
+        # Return a simple 500 error response.
+        return jsonify({'error': str(e), 'message': 'An error occurred while fetching entries.'}), 500
 
-# Создание новой записи (CREATE)
+# Route to handle creating a new diary entry.
+# Supports both GET (to display form) and POST (to submit data).
 @main_bp.route('/create', methods=['GET', 'POST'])
 def create_entry():
     try:
-        # Если запрос POST, значит пользователь нажал "Сохранить" в форме или прислал JSON
+        # If the request method is POST, attempt to process submitted data.
         if request.method == 'POST':
-            # Если прислали JSON (через Postman или другой скрипт)
+            # Handle JSON payload (e.g., from an API client or Postman).
             if request.is_json:
                 data = request.get_json()
-                # Берем данные из JSON. Если чего-то нет, подставляем пустую строку
+                # Extract title and content, default to empty string if missing.
                 title = data.get('title', '')
                 content = data.get('content', '')
             else:
-                # А если это обычная HTML форма
+                # Handle form URL-encoded payload (from an HTML form submission).
                 title = request.form.get('title', '')
                 content = request.form.get('content', '')
 
-            # Проверяем, чтобы заголовок не был пустым
+            # Basic validation: ensure the title is not empty.
             if not title:
-                return jsonify({'error': 'Название не может быть пустым!'}), 400
+                return jsonify({'error': 'Title cannot be empty.'}), 400
 
-            # Создаем новый объект записи с этими данными
+            # Instantiate the new entry object.
             new_entry = Entry(title=title, content=content)
 
-            # Добавляем его в базу данных
+            # Add the new object to the SQLAlchemy session.
             db.session.add(new_entry)
 
-            # И обязательно делаем коммит, иначе ничего не сохранится!
+            # Commit the transaction to save the new entry to the database.
             db.session.commit()
 
-            # Если просили JSON в параметрах или отправляли JSON
-            if request.args.get('json') or request.is_json:
-                return jsonify({'message': 'Ура, запись создана!', 'entry': new_entry.to_dict()}), 201
+            # Return JSON if requested by the client.
+            if 'json' in request.args or request.is_json:
+                return jsonify({'message': 'Entry created successfully.', 'entry': new_entry.to_dict()}), 201
 
-            # Если обычный браузер, то редиректим (отправляем) обратно на главную страницу
+            # Otherwise, redirect the user back to the main index page.
             return redirect(url_for('main.index'))
 
-        # Если метод GET, то просто показываем формочку для создания (шаблон create.html)
+        # If the method is GET, render the HTML form template for creating an entry.
         return render_template('create.html')
 
     except Exception as e:
-        # Обрабатываем непредвиденные ошибки
-        return jsonify({'error': str(e), 'message': 'Не удалось создать запись.'}), 500
+        # Generic exception block for unhandled errors.
+        return jsonify({'error': str(e), 'message': 'Failed to create entry.'}), 500
 
 
-# Чтение одной конкретной записи (READ)
+# Route to fetch and display a single specific entry by its primary key ID.
+# Uses <int:id> to ensure the ID parameter is cast as an integer.
 @main_bp.route('/entry/<int:id>', methods=['GET'])
 def get_entry(id):
     try:
-        # Ищем запись по ID. Если не найдет - вернет 404 (Not Found)
-        # Это магия SQLAlchemy (get_or_404)
+        # Attempt to retrieve the entry; will automatically return a 404 response if not found.
+        # This is a convenient SQLAlchemy feature for view functions.
         entry = Entry.query.get_or_404(id)
 
-        # Если просят JSON
-        if request.args.get('json'):
+        # If JSON is requested via query string, serialize the object.
+        if 'json' in request.args:
             return jsonify({'entry': entry.to_dict(), 'status': 'success'})
 
-        # А иначе отдаем шаблон и саму запись туда
+        # Default behavior: render the view HTML template with the single entry.
         return render_template('view.html', entry=entry)
 
     except Exception as e:
-        return jsonify({'error': str(e), 'message': 'Запись не найдена или ошибка БД.'}), 404
+        # Fallback error handling.
+        return jsonify({'error': str(e), 'message': 'Entry not found or database error.'}), 404
 
 
-# Редактирование записи (UPDATE)
+# Route to update an existing diary entry.
+# Supports GET (to populate form) and POST (to submit changes).
 @main_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 def edit_entry(id):
     try:
-        # Опять ищем нашу запись в БД
+        # Fetch the existing entry from the database.
         entry = Entry.query.get_or_404(id)
 
-        # Если мы сохраняем изменения (POST)
+        # Handle form submission or JSON payload for the update action.
         if request.method == 'POST':
             if request.is_json:
                 data = request.get_json()
-                entry.title = data.get('title', entry.title) # Если title нет в JSON, оставляем старый (entry.title)
+                # Update attributes; retain old values if the new keys are missing.
+                entry.title = data.get('title', entry.title)
                 entry.content = data.get('content', entry.content)
-                # Если передали is_completed в JSON, то обновляем
+                # Parse boolean state from JSON payload if present.
                 if 'is_completed' in data:
                     entry.is_completed = bool(data.get('is_completed'))
             else:
-                # Из HTML формы получаем данные (у формы тоже могут быть свои причуды)
+                # Handle form data updates.
                 entry.title = request.form.get('title', entry.title)
                 entry.content = request.form.get('content', entry.content)
-                # Чекбокс в HTML форме: если он нажат, форма шлет 'on', иначе ничего не шлет (None)
+                # Form checkboxes only send 'on' when checked. Convert it to a boolean.
                 entry.is_completed = request.form.get('is_completed') == 'on'
 
-            # Сохраняем (коммитим) в базу
+            # Commit the session to persist the changes in the database.
             db.session.commit()
 
-            if request.args.get('json') or request.is_json:
-                return jsonify({'message': 'Запись успешно обновлена!', 'entry': entry.to_dict()})
+            # Send JSON response if appropriate.
+            if 'json' in request.args or request.is_json:
+                return jsonify({'message': 'Entry updated successfully.', 'entry': entry.to_dict()})
 
-            # Возвращаемся на главную
+            # Redirect to the home page upon successful edit.
             return redirect(url_for('main.index'))
 
-        # Если GET запрос, то показываем формочку с уже заполненными старыми данными
+        # Render the edit template, pre-filled with the current entry data.
         return render_template('edit.html', entry=entry)
 
     except Exception as e:
-        return jsonify({'error': str(e), 'message': 'Ошибка при редактировании.'}), 500
+        # Generic error catching during the update process.
+        return jsonify({'error': str(e), 'message': 'Failed to edit entry.'}), 500
 
 
-# Удаление записи (DELETE)
-# Я использую GET или POST для формы, потому что HTML формы не умеют делать DELETE напрямую, только через JS.
-# Но если это API, мы поддерживаем DELETE.
+# Route to handle deleting an entry.
+# Although HTML forms don't support DELETE natively, allowing GET/POST makes HTML implementation easier.
+# DELETE method is supported for API consumers.
 @main_bp.route('/delete/<int:id>', methods=['GET', 'POST', 'DELETE'])
 def delete_entry(id):
     try:
-        # Находим запись, которую будем удалять
+        # Look up the record by ID.
         entry = Entry.query.get_or_404(id)
 
-        # Удаляем объект из сессии базы данных
+        # Mark the object for deletion within the active database session.
         db.session.delete(entry)
 
-        # Коммитим (сохраняем изменения, то есть окончательно удаляем)
+        # Finalize the deletion by committing the transaction.
         db.session.commit()
 
-        if request.args.get('json') or request.method == 'DELETE':
-            return jsonify({'message': 'Запись удалена навсегда!', 'deleted_id': id})
+        # Determine the appropriate response format (JSON vs Redirect).
+        if 'json' in request.args or request.method == 'DELETE':
+            return jsonify({'message': 'Entry deleted permanently.', 'deleted_id': id})
 
-        # Возвращаем юзера на главную страницу после удаления
+        # Send the user back to the index view after deleting via UI.
         return redirect(url_for('main.index'))
 
     except Exception as e:
-        return jsonify({'error': str(e), 'message': 'Не вышло удалить :('}), 500
+        # Exception block for failed deletion attempts.
+        return jsonify({'error': str(e), 'message': 'Failed to delete entry.'}), 500
 
 
-# Дополнительный маршрут, чтобы быстро менять статус (выполнено / не выполнено)
-# Джуны часто делают такие маленькие функции для удобства.
+# A helper route commonly implemented to quickly toggle the completion status of a task/entry.
+# Switches the boolean flag on the fly without needing to go through the edit form.
 @main_bp.route('/toggle/<int:id>', methods=['GET', 'POST'])
 def toggle_completed(id):
     try:
+        # Get the record.
         entry = Entry.query.get_or_404(id)
 
-        # Меняем значение на противоположное (если было True, станет False, и наоборот)
+        # Invert the current boolean value for the completion status.
         entry.is_completed = not entry.is_completed
 
+        # Commit the toggle change to the database.
         db.session.commit()
 
-        if request.args.get('json'):
-            return jsonify({'message': 'Статус изменен', 'entry': entry.to_dict()})
+        # Respond according to the request format.
+        if 'json' in request.args:
+            return jsonify({'message': 'Status toggled successfully.', 'entry': entry.to_dict()})
 
+        # Redirect back to the homepage.
         return redirect(url_for('main.index'))
 
     except Exception as e:
-        return jsonify({'error': str(e), 'message': 'Ошибка при изменении статуса.'}), 500
+        # Fallback error catching.
+        return jsonify({'error': str(e), 'message': 'Failed to toggle status.'}), 500

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Редактировать запись - {{ entry.title }}</title>
+    <title>Edit Entry - {{ entry.title }}</title>
     <style>
         body { font-family: Arial, sans-serif; background: #eef; margin: 20px; }
         .form-container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
@@ -14,29 +14,29 @@
 </head>
 <body>
     <div class="form-container">
-        <h2>Редактирование записи #{{ entry.id }}</h2>
+        <h2>Editing Entry #{{ entry.id }}</h2>
 
-        <!-- Форма шлет POST на edit_entry передавая id текущей записи -->
+        <!-- Submit changes to the 'edit_entry' route, referencing the specific id in the URL parameter -->
         <form action="{{ url_for('main.edit_entry', id=entry.id) }}" method="POST">
-            <label for="title">Новый заголовок:</label>
-            <!-- Подставляем старое значение из базы в value -->
+            <label for="title">Title:</label>
+            <!-- Prepopulate the text input with the existing database value for this entry -->
             <input type="text" id="title" name="title" value="{{ entry.title }}" required>
 
-            <label for="content">Новый текст:</label>
+            <label for="content">Content:</label>
             <textarea id="content" name="content" rows="10" required>{{ entry.content }}</textarea>
 
             <label>
-                <!-- Чекбокс для статуса "выполнено". Если True, то ставим галочку (checked) -->
+                <!-- Include the completion status checkbox. Marked 'checked' if True in DB -->
                 <input type="checkbox" name="is_completed" {% if entry.is_completed %}checked{% endif %}>
-                Отметить как выполненную (зачеркнуть)
+                Mark as completed
             </label>
             <br><br>
 
-            <button type="submit" class="btn">Сохранить изменения</button>
+            <button type="submit" class="btn">Save Changes</button>
         </form>
 
         <br>
-        <a href="{{ url_for('main.index') }}">⬅️ Назад</a>
+        <a href="{{ url_for('main.index') }}">Back</a>
     </div>
 </body>
 </html>
